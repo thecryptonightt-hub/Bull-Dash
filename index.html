@@ -76,11 +76,16 @@ h2{margin-top:0} .small{color:#cbd5e1;font-size:13px}
 </div>
 </div>
 </div>
+<div class="card" id="liveData">
+<h2>📈 Live now — prices on Refresh</h2>
+<p class="small" id="liveNote">Tap Refresh scores below for live prices. Prices come from Yahoo Finance and CoinGecko, via the app's backend — no price is invented here.</p>
+<div id="livePrices">No live prices yet — tap Refresh scores.</div>
+</div>
 <div class="card" id="scored20">
 <h2>🏆 Basenese Top 20 — Scored 1–100, ranked</h2>
-<p><b>Scoring, from the picture's criteria:</b> Trend fit (AI infrastructure, personalized medicine, oil macro) up to 40 + Bottom-up value (small, undervalued, distressed) up to 30 + Earnings / cash strength up to 20 + Catalyst up to 10 = 100. Scores are criteria-based as of 1 Nov 2026, from the sources checked, not live market prices.</p>
+<p><b>Scoring, from the picture's criteria:</b> Trend fit (AI infrastructure, personalized medicine, oil macro) up to 40 + Bottom-up value (small, undervalued, distressed) up to 30 + Earnings / cash strength up to 20 + Catalyst up to 10 = 100. Scores are criteria-based as of 1 Nov 2026, from newsletter analysis. Tap Refresh below for live market prices and the latest newsletters — scores themselves are not recalculated from price alone.</p>
 <button class="tab" id="refreshScores" style="background:#22c55e;color:#fff">↻ Refresh scores</button>
-<p class="small" id="refreshNote">Last refreshed: 1 Nov 2026, on load. Tap Refresh to re-apply the criteria to the data in this app and re-sort. Refresh does not pull live market prices; scores update when new newsletters are added — it does not invent a live move.</p>
+<p class="small" id="refreshNote">Tap Refresh for live prices and the latest newsletters. Prices below update live on Refresh; scores update when new newsletter analysis arrives.</p>
 <div id="scoreDetail" style="background:#1e293b;color:#f1f5f9;border:2px solid #f59e0b;border-radius:16px;padding:14px;margin:10px 0;font-size:16px;line-height:1.6">Tap a stock below to see more information, like the detail view.</div>
 <div id="scoreList"></div>
 </div>
@@ -109,7 +114,44 @@ const scored=[
 ];
 function renderScores(){ const el=document.getElementById('scoreList'); el.innerHTML=scored.map(x=>'<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:2px dashed #fde68a"><b style="width:36px">'+x.s+'</b><div style="flex:1"><b>'+x.n+'</b><br><span class="small">'+x.why+'</span><div style="height:6px;background:#e5e7eb;border-radius:999px;margin-top:4px"><i style="display:block;height:100%;width:'+x.s+'%;background:linear-gradient(90deg,#f59e0b,#ec4899);border-radius:999px"></i></div></div></div>').join(''); }
 renderScores();
-document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScores(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the data in this app and re-sorted. Scores update when new newsletters are added; this app does not invent a live move.'; };
+async function doRefresh(){
+  var note=document.getElementById('refreshNote');
+  note.textContent='Refreshing — pulling live prices and checking for new newsletters…';
+  var liveEl=document.getElementById('livePrices');
+  var tickers=['AIB','LLY','TER','VRT','GOOGL','VLO','MPC','GANX','GRAL','PSX','FN','LRCX','AMZN','NVDA','MSFT','OPEN','KTOS','FORM','OUST','CRWV'];
+  var liveMsg=[];
+  try{
+    var q=await fetch('https://snap-nutra-vision-proxy.vercel.app/api/quotes?symbols='+tickers.join(','));
+    if(!q.ok) throw new Error('quotes '+q.status);
+    var data=await q.json();
+    var rows=data.quotes.map(function(x){
+      if(x.error) return '<div>'+x.symbol+': unavailable</div>';
+      var c=x.changePercent===null?'':(x.changePercent>=0?'+':'')+x.changePercent+'%';
+      var col=x.changePercent===null?'#cbd5e1':(x.changePercent>=0?'#22c55e':'#ef4444');
+      return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px dashed #334155"><b>'+x.symbol+'</b><span>$'+x.price+' <b style="color:'+col+'">'+c+'</b></span></div>';
+    }).join('');
+    var cr=(data.crypto||[]).map(function(c){ return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px dashed #334155"><b>'+c.id.toUpperCase()+'</b><span>$'+c.usd+' <b style="color:'+(c.change24h>=0?'#22c55e':'#ef4444')+'">'+(c.change24h>=0?'+':'')+c.change24h+'% (24h)</b></span></div>'; }).join('');
+    liveEl.innerHTML='<div><b>Stocks (Yahoo, via backend)</b>'+rows+'</div><div style="margin-top:10px"><b>Crypto (CoinGecko)</b>'+cr+'</div><p class="small">Live as of '+new Date(data.asOf).toLocaleString()+'.</p>';
+    liveMsg.push('live prices loaded');
+  }catch(e){
+    liveEl.innerHTML='Live prices could not be loaded right now — showing the newsletter scores only. Try Refresh again in a minute. No prices were invented.';
+    liveMsg.push('live prices failed');
+  }
+  try{
+    var pageUrl=window.location.href.split('?')[0]+'?t='+Date.now();
+    var resp=await fetch(pageUrl,{cache:'no-store'});
+    var html=await resp.text();
+    var doc=new DOMParser().parseFromString(html,'text/html');
+    var fresh=doc.getElementById('latest-updates');
+    var cur=document.getElementById('latest-updates');
+    if(fresh && cur && fresh.innerHTML!==cur.innerHTML){ cur.innerHTML=fresh.innerHTML; liveMsg.push('new newsletters loaded from the live site'); }
+    else { liveMsg.push('no new newsletters since this page loaded'); }
+  }catch(e){ liveMsg.push('newsletter check failed — showing the version loaded at page open'); }
+  scored.sort((a,b)=>b.s-a.s);
+  try{ renderScoresAsButtons(); }catch(e){ renderScores(); }
+  note.textContent='Refreshed: '+new Date().toLocaleString()+' — '+liveMsg.join('; ')+'. Scores are Basenese criteria scores from newsletter analysis, not recalculated from price alone.';
+}
+document.getElementById('refreshScores').onclick=doRefresh;
 </script>
 <script>
 const detail={
@@ -143,7 +185,7 @@ function renderScoresAsButtons(){
   }).join('');
 }
 renderScoresAsButtons();
-document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScoresAsButtons(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the data in this app and re-sorted. Scores update when new newsletters are added; this app does not invent a live move.'; };
+document.getElementById('refreshScores').onclick=doRefresh;
 </script>
 <div class="card" id="latest-updates">
 <h2>📰 Latest finance updates — week ahead</h2>
