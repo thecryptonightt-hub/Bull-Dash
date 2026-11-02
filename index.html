@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Finance Newsletter Dashboard — Prototype</title>
+<title>Finance Newsletter Dashboard</title>
 <style>
 *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b1020;color:#f1f5f9}
 header{background:linear-gradient(135deg,#7c3aed,#ec4899,#f59e0b);color:#fff;padding:28px 20px 22px;border-radius:0 0 28px 28px;box-shadow:0 0 24px rgba(236,72,153,.45)}
@@ -20,8 +20,8 @@ h2{margin-top:0} .small{color:#cbd5e1;font-size:13px}
 <body>
 <header>
 <h1>📊 Finance Newsletter Dashboard</h1>
-<p>Prototype — one tap per newsletter, then everything together. Colorful, mobile-friendly, and easy to skim.</p>
-<p class="small" style="color:#fff">Figures are as reported in the newsletters, not live-verified market data. This is a prototype for approval — no GitHub repo has been created yet.</p>
+<p>Live app — one tap per newsletter, then everything together. Colorful, mobile-friendly, and easy to skim.</p>
+<p class="small" style="color:#fff">Figures are as reported in the newsletters, not live-verified market data. This app is live on GitHub and updates when a new newsletter is read.</p>
 </header>
 <main>
 <div class="card">
@@ -80,7 +80,7 @@ h2{margin-top:0} .small{color:#cbd5e1;font-size:13px}
 <h2>🏆 Basenese Top 20 — Scored 1–100, ranked</h2>
 <p><b>Scoring, from the picture's criteria:</b> Trend fit (AI infrastructure, personalized medicine, oil macro) up to 40 + Bottom-up value (small, undervalued, distressed) up to 30 + Earnings / cash strength up to 20 + Catalyst up to 10 = 100. Scores are criteria-based as of 1 Nov 2026, from the sources checked, not live market prices.</p>
 <button class="tab" id="refreshScores" style="background:#22c55e;color:#fff">↻ Refresh scores</button>
-<p class="small" id="refreshNote">Last refreshed: 1 Nov 2026, on load. Tap Refresh to re-apply the criteria to the data in this prototype and re-sort. In the real version, Refresh will pull live market data; in this prototype it re-applies the same Nov 1 criteria data, so scores do not change unless the underlying data is updated — it does not invent a live move.</p>
+<p class="small" id="refreshNote">Last refreshed: 1 Nov 2026, on load. Tap Refresh to re-apply the criteria to the data in this app and re-sort. Refresh does not pull live market prices; scores update when new newsletters are added — it does not invent a live move.</p>
 <div id="scoreDetail" style="background:#1e293b;color:#f1f5f9;border:2px solid #f59e0b;border-radius:16px;padding:14px;margin:10px 0;font-size:16px;line-height:1.6">Tap a stock below to see more information, like the detail view.</div>
 <div id="scoreList"></div>
 </div>
@@ -109,7 +109,7 @@ const scored=[
 ];
 function renderScores(){ const el=document.getElementById('scoreList'); el.innerHTML=scored.map(x=>'<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:2px dashed #fde68a"><b style="width:36px">'+x.s+'</b><div style="flex:1"><b>'+x.n+'</b><br><span class="small">'+x.why+'</span><div style="height:6px;background:#e5e7eb;border-radius:999px;margin-top:4px"><i style="display:block;height:100%;width:'+x.s+'%;background:linear-gradient(90deg,#f59e0b,#ec4899);border-radius:999px"></i></div></div></div>').join(''); }
 renderScores();
-document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScores(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the Nov 1 prototype data and re-sorted. Live market-data refresh comes in the real version after approval; this prototype does not invent a live move.'; };
+document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScores(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the data in this app and re-sorted. Scores update when new newsletters are added; this app does not invent a live move.'; };
 </script>
 <script>
 const detail={
@@ -143,7 +143,7 @@ function renderScoresAsButtons(){
   }).join('');
 }
 renderScoresAsButtons();
-document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScoresAsButtons(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the Nov 1 prototype data and re-sorted. Live market-data refresh comes in the real version after approval; this prototype does not invent a live move.'; };
+document.getElementById('refreshScores').onclick=()=>{ scored.sort((a,b)=>b.s-a.s); renderScoresAsButtons(); document.getElementById('refreshNote').textContent='Refreshed: '+new Date().toLocaleString()+' — criteria re-applied to the data in this app and re-sorted. Scores update when new newsletters are added; this app does not invent a live move.'; };
 </script>
 <div class="card" id="latest-updates">
 <h2>📰 Latest finance updates — week ahead</h2>
