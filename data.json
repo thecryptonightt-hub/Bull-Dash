@@ -1,0 +1,150 @@
+{
+  "generatedAt": "2026-11-02T11:06:54.765Z",
+  "generatedAtNote": "Server refresh timestamp (UTC). The page shows this as \"Last refreshed\".",
+  "sources": {
+    "cryptoLive": "CoinGecko public API, no key: /api/v3/global and /api/v3/simple/price",
+    "fedOdds": "Polymarket public gamma API, searched by event title; used only on an exact title match, otherwise UNKNOWN",
+    "everythingElse": "Last-reported newsletter figures below, with their original dates. No free no-key feed was verified for them."
+  },
+  "cryptoLive": {
+    "status": "live",
+    "source": "CoinGecko",
+    "totalMarketCapUsd": 2604043083433.5513,
+    "totalMarketCapFormatted": "$2.60T",
+    "marketCapChange24hPct": -2.7826159081097033,
+    "bitcoinDominancePct": 59.951259909311226,
+    "bitcoinPriceUsd": 77897,
+    "fearGreed": {
+      "value": 42,
+      "sentiment": "fear"
+    },
+    "fetchedAt": "2026-11-02T11:06:54.765Z"
+  },
+  "cryptoLiveError": null,
+  "fedOddsLive": null,
+  "fedOddsNote": "UNKNOWN — no December Fed-rate market found in the returned Polymarket events, so the last-reported 83% hike figure is kept only as last-reported, not as live.",
+  "reportedMoves": {
+    "status": "last-reported",
+    "asOf": "30 Oct 2026",
+    "source": "The Daily Rip, Friday close",
+    "items": [
+      {
+        "name": "S&P 500",
+        "changePct": -1.8
+      },
+      {
+        "name": "QQQ",
+        "changePct": -3.5
+      },
+      {
+        "name": "Intel",
+        "changePct": -28.6
+      },
+      {
+        "name": "Reddit",
+        "changePct": -29.2
+      },
+      {
+        "name": "Global Payments",
+        "changePct": 13
+      },
+      {
+        "name": "FedEx Freight",
+        "changePct": 14.9
+      },
+      {
+        "name": "GoDaddy",
+        "changePct": 10.7
+      }
+    ]
+  },
+  "cryptoCapsLastReported": {
+    "status": "last-reported",
+    "asOf": "31 Oct 2026",
+    "source": "Cryptotwits, Week 44",
+    "totalCapYtdPct": -12,
+    "totalCapFromAthPct": -39,
+    "altcoinCapYtdPct": -14,
+    "altcoinCapFromAthPct": -41,
+    "totalCapAth": "$4.22T",
+    "altcoinCapAth": "$1.73T"
+  },
+  "macroLastReported": {
+    "status": "last-reported",
+    "inflationPceSeptember": {
+      "headlinePct": 3.6,
+      "corePct": 3.1,
+      "previousHeadlinePct": 3.4,
+      "previousCorePct": 3
+    },
+    "gdpQ3AnnualizedPct": 3.4,
+    "gdpQ2AnnualizedPct": 2.2,
+    "joblessClaims": 194000,
+    "joblessWeekEnding": "24 Oct 2026",
+    "fedRateCurrent": "3.75%–4.00%",
+    "fedRateNote": "Held, with Cook and Hammack dissenting for a hike (as reported).",
+    "fedOddsDecemberLastReported": {
+      "hikePct": 83,
+      "holdOrCutPct": 17,
+      "note": "Average of 84.6% (Daily Rip, 28 Oct) and over 80% (Opening Bell, 29 Oct). No separate Kalshi vs Polymarket split was given."
+    },
+    "otherMacro": [
+      "US goods trade deficit $134.9B in September",
+      "Bank of Canada +0.25% to 2.5%",
+      "Oil $104.12, +2.1%"
+    ]
+  },
+  "basenese": {
+    "status": "inputs-not-available",
+    "note": "Scoring weights unchanged. The stock rows themselves are rendered client-side in the published page and were not present in the fetched page text, so no stock name or score is listed here rather than inventing one. Supply the stock inputs and this block can be scored and re-sorted.",
+    "scoring": {
+      "trendFitMax": 40,
+      "bottomUpValueMax": 30,
+      "earningsCashMax": 20,
+      "catalystMax": 10,
+      "totalMax": 100
+    },
+    "criteria": "Trend fit (AI infrastructure, personalized medicine, oil macro) + Bottom-up value (small, undervalued, distressed) + Earnings / cash strength + Catalyst",
+    "asOf": "1 Nov 2026 (criteria, as published)",
+    "stocks": []
+  },
+  "updatesLastReported": {
+    "status": "last-reported",
+    "weekAhead": "2–8 Nov 2026",
+    "items": [
+      {
+        "when": "Mon 2 Nov",
+        "text": "Kobeissi Letter Chart of the Week published (link-only email, chart not described here)."
+      },
+      {
+        "when": "Tue 3 Nov",
+        "text": "ImmunityBio earnings, swing factor per Stocktwits Top 25 Week 43; Anktiva + BCG bladder-cancer trial results expected in November."
+      },
+      {
+        "when": "Wed 4 Nov",
+        "text": "agilon health earnings; Russell 2000 #1 despite -1.2% week, Springfield Clinic expansion targeting ~21,000 additional traditional Medicare beneficiaries."
+      },
+      {
+        "when": "Mid-Nov, no exact date",
+        "text": "Anthropic IPO, ticker ANT, $75–100B share sale hoped at $1.5–2T valuation, per Lark."
+      }
+    ],
+    "larkOctober": [
+      "Nasdaq down 9.5% since early October; Intel -47%, Google -22%, Nvidia -16%, tied to the AI \"circular economy\" story.",
+      "Binance hack: $6.4B drained 29 Oct, $3B in stables frozen, Binance covering 100% of user losses.",
+      "Anthropic H1: revenue $16.3B (+1,300% YoY), $80.7B net losses, ~$750B compute commitments.",
+      "Lark trades: short Google first take-profit hit 26 Oct, second target $271 would make +11.5% (not already banked); long gold -5.5%, stopped at $3,930 on 30 Oct."
+    ],
+    "cryptoDataDiveWeek44": [
+      "Total crypto cap ATH close $4.22T, YTD -12%, -39% from ATH; altcoin cap ATH $1.73T, YTD -14%, -41% from ATH.",
+      "Weekly: AI -13%, DeFi -8%, meme -8%, stablecoins -1%.",
+      "Liquidations: ~$1.055B longs 7 Oct, ~$1.7B combined 28–29 Oct; repeated $400–500M long-liquidation days with BTC barely moving point to leverage, not volatility."
+    ]
+  },
+  "summaryLastReported": {
+    "status": "last-reported",
+    "bigPicture": "AI is now graded on cash, not just growth. Strong earnings were not enough when spending and guidance disappointed, and the AI selloff is also a financing story — data-center debt is piling up while demand for compute still holds.",
+    "cryptoSameWeek": "The Binance hack (~$6.4B drained, ~$3B frozen) shook trust, yet tokenization and regulated perps kept advancing — DTCC, Ripple's trust bank, and ICE / Hyperliquid all point the same way: crypto plumbing is going mainstream even as prices slide.",
+    "whatToWatch": "December Fed decision, PCE, AI cash flow vs. capex, and whether HYPE holds $100 and Bitcoin holds above its 200-day average."
+  }
+}
