@@ -1,0 +1,26 @@
+name: Refresh Snap Finance data
+on:
+  schedule:
+    - cron: '0 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Refresh data.json
+        run: node scripts/refresh-data.js
+      - name: Commit data.json if changed
+        run: |
+          git config user.name "snap-finance-refresh"
+          git config user.email "snap-finance-refresh@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || git commit -m "Refresh Snap Finance data"
+          git push
