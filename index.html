@@ -61,17 +61,18 @@ h2{margin-top:0} .small{color:#cbd5e1;font-size:13px}
 <li><b>Inflation — PCE, September:</b> headline <b>3.6%</b>, core <b>3.1%</b> (headline up from 3.4%, core up from 3.0%)</li>
 <li><b>GDP — Q3:</b> <b>3.4%</b> annualized, up from 2.2% in Q2</li>
 <li><b>Jobless report:</b> claims <b>194,000</b> for the week ending 24 Oct</li>
-<li><b>Fed rate odds — December meeting (8–9 Dec):</b> <b>~83% hike</b>, ~17% hold / cut — see chart →</li>
+<li id="fedOddsItem"><b>Fed rate odds — December meeting (8–9 Dec):</b> <b>~83% hike</b>, ~17% hold / cut — see chart → (live on Refresh)</li>
 <li><b>Current Fed rate:</b> <b>3.75%–4.00%</b>, held, with Cook and Hammack dissenting for a hike</li>
 <li><b>Other macro to watch:</b> US goods trade deficit $134.9B in September; Bank of Canada +0.25% to 2.5%; oil $104.12, +2.1%; Bitcoin ~$77,500, Fear &amp; Greed 36 (Fear)</li>
 </ol>
-<p class="small">Fed odds, plainly: ~83% hike is just the average of 84.6% (Daily Rip, 28 Oct) and over 80% (Opening Bell, 29 Oct). The newsletters did not give a separate Kalshi vs. Polymarket split — the real version will pull live Kalshi + Polymarket after your approval.</p>
+<p class="small" id="fedOddsNote">Fed odds, plainly: ~83% hike is just the average of 84.6% (Daily Rip, 28 Oct) and over 80% (Opening Bell, 29 Oct). Tap Refresh for live Kalshi + Polymarket odds, shown separately — never blended silently.</p>
 </div>
 <div style="flex:1;min-width:240px">
 <p style="text-align:center;font-weight:700;margin:0 0 6px">December: hike vs. hold / cut</p>
 <div style="font-size:15px;line-height:1.5">
-<div>Hike <b>~83%</b><div style="height:10px;background:#1e293b;border-radius:999px;margin:2px 0 8px"><i style="display:block;height:100%;width:83%;background:#ef4444;border-radius:999px"></i></div></div>
-<div>Hold / cut <b>~17%</b><div style="height:10px;background:#1e293b;border-radius:999px;margin:2px 0 8px"><i style="display:block;height:100%;width:17%;background:#22c55e;border-radius:999px"></i></div></div>
+<div>Hike <b id="fedHikeLabel">~83%</b><div style="height:10px;background:#1e293b;border-radius:999px;margin:2px 0 8px"><i id="fedHikeBar" style="display:block;height:100%;width:83%;background:#ef4444;border-radius:999px"></i></div></div>
+<div>Hold / cut <b id="fedHoldLabel">~17%</b><div style="height:10px;background:#1e293b;border-radius:999px;margin:2px 0 8px"><i id="fedHoldBar" style="display:block;height:100%;width:17%;background:#22c55e;border-radius:999px"></i></div></div>
+<div id="fedVenueSplit" class="small" style="margin-top:8px">Live Kalshi + Polymarket split appears here on Refresh.</div>
 </div>
 </div>
 </div>
@@ -136,6 +137,28 @@ async function doRefresh(){
   }catch(e){
     liveEl.innerHTML='Live prices could not be loaded right now — showing the newsletter scores only. Try Refresh again in a minute. No prices were invented.';
     liveMsg.push('live prices failed');
+  }
+  try{
+    var fo=await fetch('https://snap-nutra-vision-proxy.vercel.app/api/fed-odds');
+    if(!fo.ok) throw new Error('fed-odds '+fo.status);
+    var fod=await fo.json();
+    var dec=(fod.meetings||[]).find(function(m){ return m.meeting.indexOf('Dec')===0; });
+    if(dec && dec.combined){
+      var hike=dec.combined.hike, holdCut=100-hike;
+      document.getElementById('fedHikeLabel').textContent=hike+'%';
+      document.getElementById('fedHikeBar').style.width=hike+'%';
+      document.getElementById('fedHoldLabel').textContent=holdCut.toFixed(1)+'%';
+      document.getElementById('fedHoldBar').style.width=holdCut+'%';
+      var split=function(v){ return v ? ('Hike 25bp '+v.hike25+'%, Hike 50bp+ '+v.hike50plus+'%, Hold '+v.hold+'%, Cut 25bp '+v.cut25+'%, Cut 50bp+ '+v.cut50plus+'%') : 'unavailable'; };
+      var others=(fod.meetings||[]).filter(function(m){ return m.meeting.indexOf('Dec')!==0; }).map(function(m){ return '<div><b>'+m.meeting+':</b> Hike '+(m.combined?m.combined.hike+'%':'?')+', Hold '+(m.combined?m.combined.hold+'%':'?')+'</div>'; }).join('');
+      document.getElementById('fedVenueSplit').innerHTML='<div><b>December — Kalshi:</b> '+split(dec.kalshi)+'</div><div><b>December — Polymarket:</b> '+split(dec.polymarket)+'</div>'+others+(fod.errors && fod.errors.length?'<div>Note: '+fod.errors.join('; ')+'</div>':'');
+      document.getElementById('fedOddsItem').innerHTML='<b>Fed rate odds — December meeting (8–9 Dec):</b> <b>'+hike+'% hike</b>, '+holdCut.toFixed(1)+'% hold / cut — live, see chart →';
+      document.getElementById('fedOddsNote').textContent='Live as of '+new Date(fod.asOf).toLocaleString()+' from Kalshi + Polymarket, shown separately above. Combined hike is the average of the two venues. These are prediction-market odds, not a Fed announcement.';
+      liveMsg.push('live Fed odds loaded (Kalshi + Polymarket)');
+    } else { document.getElementById('fedVenueSplit').textContent='Live Fed odds could not be loaded right now — showing the newsletter figure only. No odds were invented.'; liveMsg.push('live Fed odds failed'); }
+  }catch(e){
+    document.getElementById('fedVenueSplit').textContent='Live Fed odds could not be loaded right now — showing the newsletter figure only. No odds were invented.';
+    liveMsg.push('live Fed odds failed');
   }
   try{
     var pageUrl=window.location.href.split('?')[0]+'?t='+Date.now();
