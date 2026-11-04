@@ -115,6 +115,34 @@ const scored=[
 ];
 function renderScores(){ const el=document.getElementById('scoreList'); el.innerHTML=scored.map(x=>'<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-top:2px dashed #fde68a"><b style="width:36px">'+x.s+'</b><div style="flex:1"><b>'+x.n+'</b><br><span class="small">'+x.why+'</span><div style="height:6px;background:#e5e7eb;border-radius:999px;margin-top:4px"><i style="display:block;height:100%;width:'+x.s+'%;background:linear-gradient(90deg,#f59e0b,#ec4899);border-radius:999px"></i></div></div></div>').join(''); }
 renderScores();
+
+/* Bull Dash Cloudflare live-data test: fetch latest updates from the Worker/KV store.
+   - Only #latest-updates is ever replaced, and only when the fetch succeeds with entries.
+   - On failure, timeout, or the no-data-yet 404, the embedded updates stay exactly as loaded.
+   - No secret, token, or credential is used here; this is a public read of latest.json. */
+var CLOUDFLARE_LATEST_URL='https://bull-dash-data.thecryptonightt.workers.dev/latest.json';
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+async function loadLatestFromCloudflare(){
+  var card=document.getElementById('latest-updates');
+  if(!card) return false;
+  try{
+    var ctrl=new AbortController(); var timer=setTimeout(function(){ ctrl.abort(); },15000);
+    var resp=await fetch(CLOUDFLARE_LATEST_URL,{cache:'no-store',signal:ctrl.signal});
+    clearTimeout(timer);
+    if(!resp.ok) return false;
+    var data=await resp.json();
+    var entries=(data && data.entries) || [];
+    if(!entries.length) return false;
+    var items=entries.map(function(e){
+      var points=((e.points||[]).slice(0,2)).map(escHtml).join('; ');
+      return '<li><b>'+escHtml(e.source)+', '+escHtml(e.date)+':</b> &ldquo;'+escHtml(e.headline)+'&rdquo;'+(points?' &mdash; '+points:'')+'</li>';
+    }).join('');
+    card.innerHTML='<h2>\uD83D\uDCF0 Latest finance updates \u2014 week ahead</h2>'
+      +'<p class="small">Gist only here \u2014 headline + the most important points, nothing long. Tap a newsletter below for more detail. Figures as reported in the newsletters, not live-verified.</p>'
+      +'<h3>Latest \u2014 live from Cloudflare</h3><ul>'+items+'</ul>';
+    return true;
+  }catch(e){ return false; }
+}
 async function doRefresh(){
   var note=document.getElementById('refreshNote');
   note.textContent='Refreshing — pulling live prices and checking for new newsletters…';
@@ -170,11 +198,13 @@ async function doRefresh(){
     if(fresh && cur && fresh.innerHTML!==cur.innerHTML){ cur.innerHTML=fresh.innerHTML; liveMsg.push('new newsletters loaded from the live site'); }
     else { liveMsg.push('no new newsletters since this page loaded'); }
   }catch(e){ liveMsg.push('newsletter check failed — showing the version loaded at page open'); }
+  try{ if(await loadLatestFromCloudflare()){ liveMsg.push('latest updates loaded from Cloudflare'); } else { liveMsg.push('Cloudflare latest not available — showing the embedded updates'); } }catch(e){ liveMsg.push('Cloudflare latest check failed — showing the embedded updates'); }
   scored.sort((a,b)=>b.s-a.s);
   try{ renderScoresAsButtons(); }catch(e){ renderScores(); }
   note.textContent='Refreshed: '+new Date().toLocaleString()+' — '+liveMsg.join('; ')+'. Scores are Basenese criteria scores from newsletter analysis, not recalculated from price alone.';
 }
 document.getElementById('refreshScores').onclick=doRefresh;
+loadLatestFromCloudflare();
 </script>
 <script>
 const detail={
@@ -215,7 +245,6 @@ document.getElementById('refreshScores').onclick=doRefresh;
 <p class="small">Gist only here — headline + the most important points, nothing long. Tap a newsletter below for more detail. Figures as reported in the newsletters, not live-verified.</p>
 <h3>New — 3 Nov 2026</h3>
 <ul>
-<li><b>Cryptotwits, 3 Nov:</b> “Data Dive: How Crypto Performs In November” — total crypto cap closed October at $2.58T, down 9.1%; BTC $77,430, down 7.3%; no November in 12 years closed between -1% and +7%.</li>
 <li><b>Breakout, 3 Nov:</b> “Biggest crypto hack ever. AI stocks cracking. So long, Octobear.” — Binance $6.3B hack, largest ever, FBI blames North Korea; Nasdaq 100 worst day since June, Intel -29%; Bitcoin near $76K.</li>
 <li><b>Decrypt, 3 Nov:</b> “Inside the Binance hack” — Binance traces $6.4B hack to fake job interview malware; Pyongyang denies FBI finding; Binance says 98% of assets replenished, $2.85B frozen or intercepted.</li>
 <li><b>Mark Moss, 3 Nov:</b> “California's tax on billionaires” — California ballot proposes a one-time 5% tax on billionaires' net worth; Moss says structure, not moving, cuts taxes; act before 31 Dec.</li>
@@ -265,7 +294,7 @@ document.getElementById('refreshScores').onclick=doRefresh;
 <script>
 const data = [
 { n:"1. The Daily Rip", d:"Latest: 2 Nov — 'Marvell Buys Lumentum, Oil cratered on a Maybe peace'. Monday mixed: SPY -0.48%, QQQ -1.37%, DIA +0.43%, IWM -0.07%; Brent down more than 6% to $105.55, U.S. crude -7.7%, September PCE 3.6% headline, 3.1% core. Marvell agreed to buy Lumentum in an all-stock deal ($115B implied enterprise value), yet MRVL -12.7% and LITE -18.6%; Apple beat on a record iPhone quarter ($114.48B revenue, $2.10 a share) but fell 2.1%; Palantir revenue +96%, U.S. commercial ($984M) passing U.S. government ($953M) for the first time; Oracle filed a $20B raise and fell 8.8% to $119.22; Anthropic Q3 revenue $16.96B, up 47% from Q2, with $895.4B compute commitments through 2045. Plus 31 Oct Stocktwits Top 25: Week 43, and 30 Oct close: S&P 500 -1.8% to 7,580.07, QQQ -3.5%.", stocks:["Marvell (MRVL)","Lumentum (LITE)","Apple (AAPL)","Palantir (PLTR)","Oracle (ORCL)","Anthropic (ANT, upcoming)","AMD (AMD)","Idexx (IDXX)","Molson Coors (TAP)","Micron (MU)","Compass Pathways (CMPS)","Intel (INTC)","Amazon (AMZN)","Alphabet (GOOGL)","Reddit (RDDT)","Global Payments (GPN)","FedEx Freight","GoDaddy (GDDY)"], narrative:"AI spending scare hits deal-making and earnings alike — even record quarters and beats fell when spending, guidance, or dilution disappointed." },
-{ n:"2. Cryptotwits", d:"Latest: 3 Nov — 'Data Dive: How Crypto Performs In November'. Total crypto cap closed October at $2.58T, down 9.1%, second red October in a row. BTC $77,430, down 7.3%; ETH down 16.1%; XRP down 16%; DOGE down 20%; ZEC $1,251, down 13%; SOL $95.54, down 19%. No November in 12 years closed between -1% and +7%.", stocks:["Bitcoin (BTC)","Ethereum (ETH)","XRP (XRP)","Dogecoin (DOGE)","Zcash (ZEC)","Solana (SOL)"], narrative:"November picks a side — history says the quarter’s colour on 20 Nov holds." },
+{ n:"2. Cryptotwits", d:"Latest: 2 Nov — 'Anyway, How Was Your Weekend?' Binance reopened withdrawals Sunday: $4.65B out, $1.01B back in 9.5 hours, $3.64B net outflow (2.1% of its $171B pile), 98% of users stayed per CZ. FBI confirmed North Korea's TraderTraitor Saturday, 628 wallets to block; Binance has refilled 95% of stolen funds, proof of reserves out Monday (10 coins, at least 1:1, snapshot Oct. 31); hackers still hold $3.28B across 950-plus wallets. Securitize added 13 U.S. stocks (Exxon, Lockheed, Disney, Uber, Salesforce, J&J, GameStop) to 25 names, about $5B tokenized. Aave forum shopping speed limits after 19,762 ETH was borrowed against stolen USDT; World's Proof of Human badge live on Tinder in the U.S. and Japan; Broadridge/NYSE moving shareholder votes on-chain; Uber treasury pilot on-chain with HSBC. Plus 31 Oct Crypto Data Dive, Week 44.", stocks:["Exxon","Lockheed","Disney","Uber","GameStop","Securitize (SECZ)","THORChain (RUNE)","Aave (AAVE)","Worldcoin (WLD)","Bitcoin (BTC)","Ethereum (ETH)"], narrative:"Tokenization keeps advancing — stocks, votes, and corporate cash on-chain — even as the hack aftermath dominates security talk." },
 { n:"3. Opening Bell Daily", d:"Latest: 3 Nov — 'Apple keeps winning'. Apple only Magnificent 7 stock beating S&P 500 this year, up more than 24%. Record September-quarter revenue over $114B, $2.10 a share vs $1.99 expected, iPhone +17%, Greater China +21%, Services over $31B. Capex about $9B vs Amazon over $215B.", stocks:["Amazon (AMZN)","Intel (INTC)","Alphabet (GOOGL)","Microsoft (MSFT)","Oracle (ORCL)"], narrative:"Good quarters, bad reactions — the market is pricing spending and guidance, not just sales." },
 { n:"4. Lark Davis", d:"Latest: 3 Nov — 'Market Impact if Democrats Sweep'. Democrat sweep put at 75% on Polymarket; tech/AI faces tighter scrutiny, Nasdaq down 11% since early-October highs; Bitcoin pressure seen negligible. Trade: short Coinbase at $136, below $139–$146 support.", stocks:["Strategy (MSTR)","Coinbase (COIN)","Tether (USDT)","Polymarket","Tesla (TSLA)"], narrative:"Crypto earnings split, stablecoins keep growing, and the Binance hack is the story that frames custody." },
 { n:"5. Mark Moss", d:"Latest: 3 Nov — 'California's tax on billionaires'. California ballot proposes a one-time 5% tax on billionaires' net worth; Moss argues tax structure, not relocating, lowers taxes, and 2026 taxes are decided before 31 Dec. Plus 2 Nov: no election fixes retirement; average Social Security ~$2,170/month.", stocks:["Bitcoin (BTC)","Gold"], narrative:"Idle assets are the theme — money sitting still, whether in a house, a brokerage, gold, or cold storage." },
