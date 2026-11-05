@@ -202,12 +202,58 @@ async function doRefresh(){
     else { liveMsg.push('no new newsletters since this page loaded'); }
   }catch(e){ liveMsg.push('newsletter check failed — showing the version loaded at page open'); }
   try{ if(await loadLatestFromCloudflare()){ liveMsg.push('latest updates loaded from Cloudflare'); } else { liveMsg.push('Cloudflare latest not available — showing the embedded updates'); } }catch(e){ liveMsg.push('Cloudflare latest check failed — showing the embedded updates'); }
+  try{ if(await loadVoicesFromCloudflare()){ liveMsg.push('voices updated from Cloudflare'); } }catch(e){}
   scored.sort((a,b)=>b.s-a.s);
   try{ renderScoresAsButtons(); }catch(e){ renderScores(); }
   note.textContent='Refreshed: '+new Date().toLocaleString()+' — '+liveMsg.join('; ')+'. Scores are Basenese criteria scores from newsletter analysis, not recalculated from price alone.';
 }
 document.getElementById('refreshScores').onclick=doRefresh;
 loadLatestFromCloudflare();
+
+/* Voices to watch: the 12 investor accounts the user follows on X,
+   supplied by the user 2026-11-05 (photos of his Following list).
+   Baked-in data below is the fallback; the live list comes from the
+   same Cloudflare KV value as the newsletters (the "voices" field),
+   refreshed by the hourly job. Public posts only — never invented.
+   Dates are always shown, so a stale entry is visible as stale. */
+var VOICES=[
+{name:"Ryan Detrick",handle:"RyanDetrick",role:"Chief Market Strategist, Carson Group",date:"4 Nov 2026",url:"https://x.com/RyanDetrick",text:"The worst possible combination is a Republican President and a Democratic Congress. Futures seem to agree so far."},
+{name:"Mike Alfred",handle:"mikealfred",role:"Value investor, Alpine Fox LP; Opendoor board",date:"22 Feb 2026",url:"https://x.com/mikealfred",text:"Hearing credible chatter that, after the accelerating and expanding cartel violence across Mexico today, FIFA is considering moving the upcoming World Cup games in Mexico to additional sites in the US and Canada."},
+{name:"Willy Woo",handle:"willywoo",role:"Bitcoin on-chain analyst",date:"26 Oct 2026",url:"https://x.com/willywoo",text:"10,000 POSSIBLE FUTURE PATHS … It's a simulation, NOT my prediction. (Monte Carlo Bitcoin simulation — median path $1.03M by Feb 2033.)"},
+{name:"Raoul Pal",handle:"RaoulGMI",role:"Founder, Global Macro Investor / Real Vision",date:"27 Oct 2026",url:"https://x.com/RaoulGMI",text:"The hyperscalers are the biggest cash-generating businesses the world has ever seen. And they're recycling all of that cash flow into the biggest capex build in history. It's a self-reinforcing loop. They use the technology they're building themselves, productivity rises, cash flow rises again."},
+{name:"Lyn Alden",handle:"LynAldenContact",role:"Investment strategist, author of Broken Money",date:"22 Oct 2026",url:"https://x.com/LynAldenContact",text:"As a boring analyst, if I don't trigger liberals, conservatives, progressives, and libertarians each at least once on a quarterly basis, I'm probably not doing my job right."},
+{name:"Vlad Tenev",handle:"vladtenev",role:"CEO & Co-Founder, Robinhood",date:"5 Sep 2026",url:"https://x.com/vladtenev",text:"Everyone should be able to access high-quality financial assets, wherever they live. That's what tokenization unlocks: taking the best of US capital markets and making them available on a global scale."},
+{name:"ARK Invest",handle:"ARKInvest",role:"Investment firm (Cathie Wood)",date:"4 Nov 2026",url:"https://x.com/ARKInvest",text:"Trade notification 4 Nov: ARKK bought SpaceX (SPCX), TWST and PACB; sold BLSH, TEM, GOOG and LLY. ARK loaded ~$48M of SpaceX."},
+{name:"Brian Armstrong",handle:"brian_armstrong",role:"Co-founder & CEO, Coinbase",date:"2 Nov 2026",url:"https://x.com/brian_armstrong",text:"We're building Coinbase to be the most AI-enabled financial account. (Announcing Coinbase for Agents — AI agents can connect and trade on Coinbase.)"},
+{name:"Michael Saylor",handle:"saylor",role:"Bitcoin investor",date:"4 Nov 2026",url:"https://x.com/saylor",text:"Florida elected a Republican governor who backed a U.S. Bitcoin reserve. Texas elected a Democratic senator who voted to create one for his state. The case for holding Bitcoin crosses party lines."},
+{name:"Vitalik Buterin",handle:"VitalikButerin",role:"Co-founder, Ethereum",date:"3 Nov 2026",url:"https://x.com/VitalikButerin",text:"I would describe my worry as: what if the equivalent of quadratic sieve for ECDLP or pairings (and similarly, more-powerful-than-today algorithms for breaking lattices) exist, and we've just not yet managed to find them – but AI speedrunning 50+ years of math in 5 years will."},
+{name:"Cathie Wood",handle:"CathieDWood",role:"Founder, CEO & CIO, ARK Invest",date:"30 Oct 2026",url:"https://x.com/CathieDWood",text:"ARK Invest is excited to attend Joby Aviation's flight from our doorstep in St. Petersburg, Florida, across Tampa Bay. Joby is retracing the route of the first commercial airline flight in the world in 1914. We believe eVTOL technology will transform urban air mobility."},
+{name:"Elon Musk",handle:"elonmusk",role:"CEO, Tesla / SpaceX / xAI",date:"4 Nov 2026",url:"https://x.com/elonmusk",text:"Data centers in space looking pretty appealing right now"}
+];
+function gistText(t){ var w=String(t).split(/\s+/); return w.length>40 ? w.slice(0,40).join(" ")+" …" : t; }
+function renderVoices(list){
+  var el=document.getElementById('voicesList'); if(!el) return;
+  el.innerHTML=list.map(function(v){
+    return '<div style="padding:10px 0;border-top:2px dashed #334155"><b><a href="'+escHtml(v.url)+'" target="_blank" rel="noopener" style="color:#f1f5f9">'+escHtml(v.name)+'</a></b> <span class="small">@'+escHtml(v.handle)+'</span> <span class="small muted">· '+escHtml(v.role)+'</span><br><span class="small muted">'+escHtml(v.date)+'</span><br>'+escHtml(gistText(v.text))+'</div>';
+  }).join('');
+}
+async function loadVoicesFromCloudflare(){
+  try{
+    var ctrl=new AbortController(); var timer=setTimeout(function(){ ctrl.abort(); },15000);
+    var resp=await fetch(CLOUDFLARE_LATEST_URL,{cache:'no-store',signal:ctrl.signal});
+    clearTimeout(timer);
+    if(!resp.ok) return false;
+    var data=await resp.json();
+    var vs=(data && data.voices)||[];
+    if(!vs.length) return false;
+    renderVoices(vs);
+    var note=document.getElementById('voicesNote');
+    if(note && data.updated_at) note.textContent='Updated '+new Date(data.updated_at).toLocaleString()+' — live from Cloudflare.';
+    return true;
+  }catch(e){ return false; }
+}
+renderVoices(VOICES);
+loadVoicesFromCloudflare();
 </script>
 <script>
 const detail={
@@ -246,6 +292,14 @@ document.getElementById('refreshScores').onclick=doRefresh;
 <div class="card" id="latest-updates">
 <h2>📰 Latest finance updates — week ahead</h2>
 <p class="small">Gist only here — headline + the most important points, nothing long. Tap a newsletter below for more detail. Figures as reported in the newsletters, not live-verified.</p>
+<h3>New — 5 Nov 2026</h3>
+<ul>
+<li><b>Decrypt, 5 Nov:</b> “Bitcoin's post-election rollercoaster 🎢” — Bitcoin erased its post-election rally, crashing under $76,000, down almost 6%; tech rout followed — Tesla fell ~9% to ~$349 — as Democrats prepare a broader crypto bill.</li>
+<li><b>Mark Moss, 5 Nov:</b> “Going live at 3PM PST (save your seat)” — Live today 3PM Pacific, tying the Fed, Buffett and the election into one wealth system, plus live Q&amp;A; replay only for registrants.</li>
+<li><b>Lark Davis, 5 Nov:</b> “Why the Midterm Results Are Bullish for Markets” — Democrats swept Congress; stocks and BTC rallied, Big Tech up, AI data-center stocks fell; Morgan Stanley tokenizing stocks, Treasuries via DTCC; Democrats plan a new crypto bill.</li>
+<li><b>CoinMarketCap Spotlight, 5 Nov:</b> “Cash App’s Owner Nears a DOJ Settlement” — Block expects to pay about $764M net, deferring an anti-money laundering charge for three years; Fear &amp; Greed 42 as BTC rebounded to $80.2K.</li>
+<li><b>Opening Bell Daily, 5 Nov:</b> “Voters sour on data centers, Wall Street doesn’t care” — Microsoft +~7%, Apple +5.3% to $5T, as voters rejected data centers in nearly all 41 measures; Goldman: 45% of planned capacity at risk.</li>
+</ul>
 <h3>New — 4 Nov 2026</h3>
 <ul>
 <li><b>The Daily Rip, 4 Nov:</b> “Democrats swept, and the Dow threw a party” — Dow jumped 3% past 53,000, best post-midterm day since 1982; Brent crude fell 8.9% to $94.29.</li>
@@ -299,6 +353,12 @@ document.getElementById('refreshScores').onclick=doRefresh;
 <li>Liquidations: ~$1.055B longs 7 Oct, ~$1.7B combined 28–29 Oct; repeated $400–500M long-liquidation days with BTC barely moving point to leverage, not volatility.</li>
 </ul>
 </div>
+<div class="card" id="voices">
+<h2>🎙️ Voices to watch — what they're saying on X</h2>
+<p class="small">Public posts only, gist only. The latest post from each investor voice you follow, with the date it was posted. Tap a name to open their X profile. Updated with the hourly finance check — never invented, and if a post can't be verified publicly it shows the last one that could be, with its date.</p>
+<div id="voicesList"></div>
+<p class="small" id="voicesNote">Updated 5 Nov 2026, ~3:40 PM ET.</p>
+</div>
 <div class="card" id="combined">
 <h2>🌐 All together — synergistic summary</h2>
 <p><b>The big picture:</b> AI is now graded on cash, not just growth. Strong earnings were not enough when spending and guidance disappointed, and the AI selloff is also a financing story — data-center debt is piling up while demand for compute still holds.</p>
@@ -310,12 +370,12 @@ document.getElementById('refreshScores').onclick=doRefresh;
 const data = [
 { n:"1. The Daily Rip", d:"Latest: 4 Nov — 'Democrats swept, and the Dow threw a party'. Dow jumped 3% past 53,000, best post-midterm day since 1982; S&P 500 rose 1.85% to 7,708. Brent crude fell 8.9% to $94.29. AppLovin revenue up 55% to $2.19B, stock +22.1% after hours. Plus 3 Nov: 'AMD guided to $17B on election night'.", stocks:["Marvell (MRVL)","Lumentum (LITE)","Apple (AAPL)","Palantir (PLTR)","Oracle (ORCL)","Anthropic (ANT, upcoming)","AMD (AMD)","Idexx (IDXX)","Molson Coors (TAP)","Micron (MU)","Compass Pathways (CMPS)","Intel (INTC)","Amazon (AMZN)","Alphabet (GOOGL)","Reddit (RDDT)","Global Payments (GPN)","FedEx Freight","GoDaddy (GDDY)"], narrative:"AI spending scare hits deal-making and earnings alike — even record quarters and beats fell when spending, guidance, or dilution disappointed." },
 { n:"2. Cryptotwits", d:"Latest: 4 Nov — 'My Therapist Is Proud Of Me'. Fear & Greed rose from 26 to 34 in one day. Tokenization led: levered mortgages on Avalanche (average FICO above 740, loan-to-value under 75%); Schroders' emerging-markets bond strategy on Solana, minimum $100,000; Cross River loans on Arbitrum, production targeted early 2027. Plus 2 Nov: Binance reopening, $3.64B net out.", stocks:["Exxon","Lockheed","Disney","Uber","GameStop","Securitize (SECZ)","THORChain (RUNE)","Aave (AAVE)","Worldcoin (WLD)","Bitcoin (BTC)","Ethereum (ETH)"], narrative:"Tokenization keeps advancing — stocks, votes, and corporate cash on-chain — even as the hack aftermath dominates security talk." },
-{ n:"3. Opening Bell Daily", d:"Latest: 4 Nov — 'AMD's big data center jump'. Data center sales nearly doubled to a record $8.5 billion, nearly 64% of revenue. Q3 revenue nearly $13.4 billion vs $13.09 billion expected, $2.09 a share vs $1.95; Q4 guided to about $17 billion vs $16.2 billion consensus. Plus 3 Nov: 'Apple keeps winning'.", stocks:["AMD (AMD)","Amazon (AMZN)","Intel (INTC)","Alphabet (GOOGL)","Microsoft (MSFT)","Oracle (ORCL)"], narrative:"Good quarters, bad reactions — the market is pricing spending and guidance, not just sales." },
-{ n:"4. Lark Davis", d:"Latest: 3 Nov — 'Market Impact if Democrats Sweep'. Democrat sweep put at 75% on Polymarket; tech/AI faces tighter scrutiny, Nasdaq down 11% since early-October highs; Bitcoin pressure seen negligible. Trade: short Coinbase at $136, below $139–$146 support.", stocks:["Strategy (MSTR)","Coinbase (COIN)","Tether (USDT)","Polymarket","Tesla (TSLA)"], narrative:"Crypto earnings split, stablecoins keep growing, and the Binance hack is the story that frames custody." },
-{ n:"5. Mark Moss", d:"Latest: 4 Nov — 'Tomorrow I put it all together'. Free live masterclass 5 Nov at 3PM Pacific on a wealth system that runs on autopilot; lesson from Buffett's Berkshire handover: tie income, assets, taxes and credit together so every dollar has more than one job. Plus 3 Nov: 'California's tax on billionaires'.", stocks:["Bitcoin (BTC)","Gold"], narrative:"Idle assets are the theme — money sitting still, whether in a house, a brokerage, gold, or cold storage." },
+{ n:"3. Opening Bell Daily", d:"Latest: 5 Nov — 'Voters sour on data centers, Wall Street doesn't care'. Microsoft +~7%, Apple +5.3% to $5T, as voters rejected data centers in nearly all 41 measures; Goldman: 45% of planned capacity at risk. Plus 4 Nov: 'AMD's big data center jump'.", stocks:["AMD (AMD)","Amazon (AMZN)","Intel (INTC)","Alphabet (GOOGL)","Microsoft (MSFT)","Oracle (ORCL)","Apple (AAPL)"], narrative:"Good quarters, bad reactions — the market is pricing spending and guidance, not just sales." },
+{ n:"4. Lark Davis", d:"Latest: 5 Nov — 'Why the Midterm Results Are Bullish for Markets'. Democrats swept Congress; stocks and BTC rallied, Big Tech up, AI data-center stocks fell. Morgan Stanley tokenizing stocks and Treasuries via DTCC; Democrats plan a new crypto bill. Circle Q3 revenue $865M (+17% YoY), USDC $73.3B avg. Plus 3 Nov: 'Market Impact if Democrats Sweep'.", stocks:["Strategy (MSTR)","Coinbase (COIN)","Tether (USDT)","Polymarket","Tesla (TSLA)","Circle (CRCL)","Nvidia (NVDA)","Morgan Stanley (MS)","TeraWulf (WULF)","Qualcomm (QCOM)"], narrative:"Crypto earnings split, stablecoins keep growing, and the Binance hack is the story that frames custody." },
+{ n:"5. Mark Moss", d:"Latest: 5 Nov — 'Going live at 3PM PST (save your seat)'. Live today 3PM Pacific: the Fed, zombie money, Buffett and the election tied into one wealth system, plus live Q&A; replay only for those who register. Plus 4 Nov: 'Tomorrow I put it all together'.", stocks:["Bitcoin (BTC)","Gold"], narrative:"Idle assets are the theme — money sitting still, whether in a house, a brokerage, gold, or cold storage." },
 { n:"6. Diamandis / Metatrends", d:"Latest: 2 Nov — 'You’re Going to Own a Piece of AI': Anthropic filed its S-1 as ANT at a reported $1.5–2T valuation, with a Public Benefit Fund seeded with 5% of its shares (plus 2% more per 50% gain), roughly 20% of the company pointed at the public good. Musk will give one SpaceX share to every American child next year into Trump Accounts — about $10.5B at $146.03 a share for ~72M kids. Together $85.5B, about two days of US pay. Sanders’ AI Sovereign Wealth Fund Act (S. 4825) would take a 50% stake in major AI firms for an estimated $7T fund paying over $1,000 per American a year. Plus 31 Oct 'AI Is Creating Two Different Futures for Young People' and 30 Oct 'The AI Selloff Is a Debt Story': CoreWeave / Nebius down >30% in a month, IREN -40%, ~$500B data-center debt.", stocks:["Anthropic (ANT, upcoming)","SpaceX (private)","CoreWeave (CRWV)","Nebius (NBIS)","IREN (IREN)"], narrative:"Ownership beats handouts — a paycheck gets spent, shares compound; AI gains should be shared as equity, not just checks." },
-{ n:"7. Decrypt", d:"Latest: 4 Nov — 'After the wave'. Bitcoin back above $80,000 after Democrats swept both chambers of Congress; the stalled Clarity Act now faces a Democratic Congress wary of Trump's crypto ventures. Plus 3 Nov: 'Inside the Binance hack'.", stocks:["Bitcoin (BTC)","Ethereum (ETH)","Hyperliquid (HYPE)"], narrative:"Security is the headline — hacks keep coming, yet the market's muted reaction is framed as resilience." },
-{ n:"8. CMC Spotlight", d:"Latest: 4 Nov — 'Vitalik Says AI Has Broken Our Security Assumptions'. Vitalik warns AI voided security assumptions, urging open verifiable defensive tech; Binance hack traced to fake job interview malware, $2.85B of $6.34B frozen; Mercado Bitcoin paused after $36.3M affected; BTC $78,510, Fear & Greed 38 (Fear).", stocks:["Bitcoin (BTC)","Ethereum (ETH)","HYPE"], narrative:"Bitcoin below ETF holders' cost — fear, but regulated perps keep the HYPE story alive." },
+{ n:"7. Decrypt", d:"Latest: 5 Nov — 'Bitcoin's post-election rollercoaster'. Bitcoin erased its post-election rally, crashing under $76,000, down almost 6% as leveraged longs were wiped out; tech rout followed, Tesla fell ~9% to ~$349; Democrats prepare a broader crypto bill. Plus 4 Nov: 'After the wave'.", stocks:["Bitcoin (BTC)","Ethereum (ETH)","Hyperliquid (HYPE)","Tesla (TSLA)"], narrative:"Security is the headline — hacks keep coming, yet the market's muted reaction is framed as resilience." },
+{ n:"8. CMC Spotlight", d:"Latest: 5 Nov — 'Cash App's Owner Nears a DOJ Settlement'. Block expects to pay about $764M net, deferring an anti-money laundering charge for three years; Fear & Greed 42 as BTC rebounded to $80.2K. Plus 4 Nov: 'Vitalik Says AI Has Broken Our Security Assumptions'.", stocks:["Bitcoin (BTC)","Ethereum (ETH)","HYPE"], narrative:"Bitcoin below ETF holders' cost — fear, but regulated perps keep the HYPE story alive." },
 { n:"9. Bitwise", d:"Latest: 4 Nov — 'Why the Market Shrugged Off the Largest Hack in History'. Binance $6.3B hack left users whole; bitcoin fell ~4%, in line with risk assets. Five of 10 largest hacks saw bitcoin higher a month later. Plus 28 Oct: 'Why We're More Bullish on Bitcoin Now Than Last Year'.", stocks:["Bitcoin (BTC)"], narrative:"Long-term Bitcoin thesis, even as short-term prices slide." },
 { n:"10. Breakout", d:"Latest: 4 Nov — '$7.3M paid, 9,000 funded'. October payouts $7.31M, more than double $3.4M in October 2025; 9,000+ funded accounts in a single month, more than triple the previous; 43% more traders funded for the first time than October 2025. Plus 3 Nov: Binance hack, Nasdaq slide.", stocks:["GOLD","BRENT OIL","COPPER","NATGAS","Nasdaq 100","S&P 500"], narrative:"New real-world-asset markets, lower fees — trading access is expanding even as equities slide." }
 ];
