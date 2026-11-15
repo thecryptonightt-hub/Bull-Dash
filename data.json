@@ -1,26 +1,13 @@
 {
-  "generatedAt": "2026-11-15T01:24:33.206Z",
+  "generatedAt": "2026-11-15T08:32:12.003Z",
   "generatedAtNote": "Server refresh timestamp (UTC). The page shows this as \"Last refreshed\".",
   "sources": {
     "cryptoLive": "CoinGecko public API, no key: /api/v3/global and /api/v3/simple/price",
     "fedOdds": "Polymarket public gamma API, searched by event title; used only on an exact title match, otherwise UNKNOWN",
     "everythingElse": "Last-reported newsletter figures below, with their original dates. No free no-key feed was verified for them."
   },
-  "cryptoLive": {
-    "status": "live",
-    "source": "CoinGecko",
-    "totalMarketCapUsd": 2154273738326.478,
-    "totalMarketCapFormatted": "$2.15T",
-    "marketCapChange24hPct": -9.809506439699902,
-    "bitcoinDominancePct": 58.524358409238175,
-    "bitcoinPriceUsd": 62714,
-    "fearGreed": {
-      "value": 27,
-      "sentiment": "extreme_fear"
-    },
-    "fetchedAt": "2026-11-15T01:24:33.206Z"
-  },
-  "cryptoLiveError": null,
+  "cryptoLive": null,
+  "cryptoLiveError": "CoinGecko fetch failed: HTTP 429 from https://api.coingecko.com/api/v3/global — page keeps the previous data.json values and says so.",
   "fedOddsLive": null,
   "fedOddsNote": "UNKNOWN — no December Fed-rate market found in the returned Polymarket events, so the last-reported 83% hike figure is kept only as last-reported, not as live.",
   "reportedMoves": {
