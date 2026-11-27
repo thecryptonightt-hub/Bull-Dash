@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T22:39:32.975Z",
+  "generatedAt": "2026-11-27T04:37:39.233Z",
   "generatedAtNote": "Server refresh timestamp (UTC). The page shows this as \"Last refreshed\".",
   "sources": {
     "cryptoLive": "CoinGecko public API, no key: /api/v3/global and /api/v3/simple/price",
@@ -9,16 +9,16 @@
   "cryptoLive": {
     "status": "live",
     "source": "CoinGecko",
-    "totalMarketCapUsd": 2099020400804.0007,
-    "totalMarketCapFormatted": "$2.10T",
-    "marketCapChange24hPct": -2.203489380259686,
-    "bitcoinDominancePct": 57.89280485406757,
-    "bitcoinPriceUsd": 60486,
+    "totalMarketCapUsd": 2128430103270.098,
+    "totalMarketCapFormatted": "$2.13T",
+    "marketCapChange24hPct": -1.6330675139985817,
+    "bitcoinDominancePct": 57.9523954095557,
+    "bitcoinPriceUsd": 61508,
     "fearGreed": {
       "value": 22,
       "sentiment": "extreme_fear"
     },
-    "fetchedAt": "2026-11-26T22:39:32.975Z"
+    "fetchedAt": "2026-11-27T04:37:39.233Z"
   },
   "cryptoLiveError": null,
   "fedOddsLive": null,
